@@ -41,12 +41,14 @@ DeepSeek Harness 插件:当 AI 决定调用一个 **subagent(子代理)** 时,�
    %APPDATA%\dsh-desktop\harness\profiles\web\cordis.patch.yml
    ```
 
-   把里面的 `[]` 替换为(路径必须用**正斜杠**的绝对路径):
+   把里面的 `[]` 替换为(路径必须写成 **file:// URL**,不能用裸 `C:/...` 盘符路径,
+   Windows 下 ESM 加载器只认 `file:` 协议,否则启动会报
+   `Received protocol 'c:'`):
 
    ```yaml
    - insert:
        - id: submodel-change
-         name: 'C:/Users/Jason/Desktop/dsh-better/dsh-submodel-change/index.mjs'
+         name: 'file:///C:/Users/Jason/Desktop/dsh-better/dsh-submodel-change/index.mjs'
    ```
 
 3. **完全重启 DSH Desktop**(关闭窗口后重新打开,不是最小化),插件即生效。
@@ -76,7 +78,7 @@ dsh plugin --profile web add ./dsh-submodel-change
 ```yaml
 - insert:
     - id: submodel-change
-      name: 'C:/Users/Jason/Desktop/dsh-better/dsh-submodel-change/index.mjs'
+      name: 'file:///C:/Users/Jason/Desktop/dsh-better/dsh-submodel-change/index.mjs'
       config:
         enabled: true          # 总开关
         askOncePerParent: true # 同一父会话的后续子代理复用第一次的选择;
