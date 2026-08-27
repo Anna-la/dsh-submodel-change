@@ -4,6 +4,12 @@
   "description": "Agent turn completion notification via Windows Notification Center.",
   "type": "module",
   "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "files": ["index.mjs", "cordis.patch.yml"],
   "license": "MIT",
   "repository": {
