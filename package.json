@@ -1,7 +1,7 @@
 {
-  "name": "dsh-turn-notify",
+  "name": "@jason666not/dsh-subagent-model",
   "version": "0.1.0",
-  "description": "Agent turn completion notification via Windows Notification Center.",
+  "description": "Let the user pick which provider/model drives each subagent when the AI delegates.",
   "type": "module",
   "main": "index.mjs",
   "exports": {
@@ -14,10 +14,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Anna-la/dsh-turn-notify.git"
+    "url": "https://github.com/Anna-la/dsh-subagent-model.git"
   },
-  "homepage": "https://github.com/Anna-la/dsh-turn-notify",
-  "keywords": ["dsh-plugin", "deepseek-harness", "notification", "windows"],
+  "homepage": "https://github.com/Anna-la/dsh-subagent-model",
+  "keywords": ["dsh-plugin", "deepseek-harness", "subagent", "model-selection"],
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

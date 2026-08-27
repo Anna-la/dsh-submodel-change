@@ -1,22 +1,39 @@
-# dsh-turn-notify
+# dsh-subagent-model
 
-DeepSeek Harness 插件:当 agent 完成一轮操作(你可以继续输入指令的那一刻),
-通过 **Windows 自带的通知中心** 弹出系统通知,内容形如:
-
-> **DeepSeek Harness**
-> 「写周报」第 3 轮操作已完成
+DeepSeek Harness 插件:当 AI 决定调用一个 **subagent(子代理)** 时,在弹窗里由你选择
+**这个子代理由哪个 provider/模型驱动**,选好后该子代理(以及它嵌套派生的子代理)
+就使用你选的模型运行,不再打扰你。
 
 - **零依赖**:不 import 任何 `@deepseek-ai/*` 包,无需构建,纯 JS (ESM)。
-- **全部结束原因都会通知**(可配置):正常完成 / 出错 / 被阻止 / 达 Token 上限 / 中止 / 中断,文案各不相同。
-- 只通知**根会话**(你直接对话的那个);子 agent / fork 出来的会话结束不会打扰你。
-- 标识取**会话标题**(自动跟踪 `session/title`),取不到时回退为「Agent」。
+- **官方扩展点实现**:利用 `agent/request` waterfall 的「替换 LlmCallConfig」能力,
+  这是 Harness 为拦截/改写模型路由设计的正式钩子,不 hack 任何内部实现。
+- 只对 **in-process subagent** 生效(`provider: spawn`);其它 provider 的 child
+  事件带不到本进程,自然跳过,不影响任何原有功能。
+- 默认 **同一父会话的后续子代理复用第一次的选择**(可配置为每次都问);
+  嵌套子代理自动继承父路由,不会连环弹窗。
+
+---
+
+## 行为预览
+
+你在 GUI 里让 AI 做事,AI 判断需要派一个子代理时,会话里会弹出一张卡片:
+
+> **子代理模型选择**
+> 这个子代理用哪个模型运行?
+> - deepseek / deepseek-chat
+> - deepseek / deepseek-reasoner
+> - openrouter / claude-3-5-sonnet (手动)
+> - 使用默认模型(跟随父级,不修改)
+
+选完按回车,该子代理就用所选模型执行;卡片在子代理的**第一次模型请求前**出现,
+子代理会等你的选择,不会先用错模型跑起来。
 
 ---
 
 ## 安装方式 A:绝对路径直接挂载(推荐,无需任何命令)
 
-1. 把整个 `dsh-turn-notify` 文件夹放到一个稳定的位置,例如:
-   `C:\Users\Jason\Desktop\dsh-message\dsh-turn-notify\`
+1. 把整个 `dsh-subagent-model` 文件夹放到一个稳定的位置,例如:
+   `C:\Users\Jason\Desktop\dsh-better\dsh-subagent-model\`
 
 2. 用记事本打开 DSH Desktop 的用户补丁文件:
 
@@ -28,28 +45,27 @@ DeepSeek Harness 插件:当 agent 完成一轮操作(你可以继续输入指令
 
    ```yaml
    - insert:
-       - id: turn-notify
-         name: 'C:/Users/Jason/Desktop/dsh-message/dsh-turn-notify/index.mjs'
+       - id: subagent-model
+         name: 'C:/Users/Jason/Desktop/dsh-better/dsh-subagent-model/index.mjs'
    ```
 
 3. **完全重启 DSH Desktop**(关闭窗口后重新打开,不是最小化),插件即生效。
-   启动日志里应出现 `[turn-notify] 已加载, ...`。
+   启动日志里应出现 `[subagent-model] 已加载: 子代理发起模型请求时弹窗选择模型`。
 
-4. 随便让 agent 跑一轮,结束后通知中心就会弹出通知。
+4. 让 AI 做一件需要派子代理的事(或直接说“调用一个 subagent”),看到模型选择卡片即成功。
 
-> 提示:如果重启后没生效,检查补丁文件是否仍是合法 YAML(缩进用两个空格),
-> 路径是否写对;Windows 通知中心若没弹,先检查系统「通知」设置里
-> PowerShell / 该应用的通知是否被关闭。
+> 提示:如果重启后没生效,检查补丁文件是否仍是合法 YAML(缩进用两个空格)、
+> 路径是否写对。
 
 ## 安装方式 B:作为 bundle 安装(需要 dsh CLI)
 
-在 `dsh-turn-notify` 的**上一级目录**执行:
+在 `dsh-subagent-model` 的**上一级目录**执行:
 
 ```
-dsh plugin --profile web add ./dsh-turn-notify
+dsh plugin --profile web add ./dsh-subagent-model
 ```
 
-然后重启 DSH Desktop。卸载:`dsh plugin --profile web remove dsh-turn-notify`。
+然后重启 DSH Desktop。卸载:`dsh plugin --profile web remove dsh-subagent-model`。
 
 ---
 
@@ -59,58 +75,47 @@ dsh plugin --profile web add ./dsh-turn-notify
 
 ```yaml
 - insert:
-    - id: turn-notify
-      name: 'C:/Users/Jason/Desktop/dsh-message/dsh-turn-notify/index.mjs'
+    - id: subagent-model
+      name: 'C:/Users/Jason/Desktop/dsh-better/dsh-subagent-model/index.mjs'
       config:
         enabled: true          # 总开关
-        appName: 'DeepSeek Harness'   # 通知标题
-        fallbackAgent: 'Agent'        # 取不到会话标题时正文里的名字
-        notifyKinds: []        # 只通知这些结束原因;空数组 = 全部
-                               #   可选: completed / error / blocked /
-                               #         max-tokens / aborted / interrupted
-        cooldownMs: 2000       # 同一会话两次通知的最小间隔(毫秒)
-        silent: false          # true 时不播放通知声音
+        askOncePerParent: true # 同一父会话的后续子代理复用第一次的选择;
+                               #   设为 false 则每个子代理都重新弹窗
+        allowDefault: true     # 选项里包含「使用默认模型(跟随父级,不修改)」
+        extraModels: []        # 手动追加适配器目录未列出的模型路由,
+                               #   格式 ['provider/model', ...]
 ```
 
-示例:只想在「正常完成」和「出错」时通知、且不响铃:
+示例:每次派子代理都问、并追加一个未登记的网关模型:
 
 ```yaml
 config:
-  notifyKinds: ['completed', 'error']
-  silent: true
+  askOncePerParent: false
+  extraModels: ['openrouter/deepseek-r1']
 ```
-
----
-
-## 手动验证通知通道
-
-不装插件也能先验证 Windows 通知通道是否可用,双击运行:
-
-```
-dsh-turn-notify\test-toast.ps1
-```
-
-应弹出「DeepSeek Harness — 测试通知」;弹不出来说明系统通知设置或 PowerShell
-运行策略有问题,需要先解决再谈插件。
 
 ---
 
 ## 工作原理(简)
 
-- 监听 Cordis 事件 `session/event`(`{ global: true }` 收所有会话),过滤持久事件 `turn/end`。
-- `turn/end` 的数据 `{ turn, reason }` 正是「agent 完成这一轮操作、用户可以继续输入」的时刻;
-  `reason.kind` 决定文案:completed / error / blocked / max-tokens / aborted / interrupted。
-- 通过 `session/title` 事件跟踪每个会话的标题作为标识。
-- 通知实现:`powershell.exe -EncodedCommand`(UTF-16LE Base64)调用 WinRT
-  `ToastNotification`,走系统通知中心,零模块依赖,避免编码/引号问题。
+- **识别子代理**:child session 的 header 带 `origin: 'subagent'` 与 `parentSession`;
+  只有这种 agent 的请求会被拦下,根会话自身的请求原样放行。
+- **提问位置**:`agent/request` waterfall 在子代理**第一次发模型请求前**触发,监听器
+  先取默认配置,再向实时根 agent(通过 `userQuestions.ask`)弹模型选择卡片——
+  `ask` 严格要求 agent 是实时 root,所以提问总发生在根会话,UI 卡片也渲染在根会话。
+- **注入模型**:用户选中的 `{ provider, model }` 被写回该次 `LlmCallConfig`,
+  子代理随后以该路由发起请求,`request/header` 会如实记录这次路由变更。
+- **复用与继承**:同一 parent 的后续子代理复用 `routeByParent` 中的选择;嵌套子代理
+  由 Harness 用父路由合成子路由(`resolveChildAgentOptions`),自动继承,无需重复提问。
+- **清理**:`subagent/end` / `agent/disposed` 事件按 child 释放选择与提问标记,
+  避免内存泄漏。
 
 ## 目录
 
 ```
-dsh-turn-notify/
+dsh-subagent-model/
 ├── index.mjs        # 插件本体(唯一需要挂载的文件)
 ├── package.json     # bundle 清单(方式 B 用)
 ├── cordis.patch.yml # bundle 补丁层(方式 B 用)
-├── test-toast.ps1   # 手动验证通知通道的脚本
 └── README.md
 ```
