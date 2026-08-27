@@ -1,0 +1,20 @@
+{
+  "name": "dsh-turn-notify",
+  "version": "0.1.0",
+  "description": "Agent turn completion notification via Windows Notification Center.",
+  "type": "module",
+  "main": "index.mjs",
+  "files": ["index.mjs", "cordis.patch.yml"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Anna-la/dsh-turn-notify.git"
+  },
+  "homepage": "https://github.com/Anna-la/dsh-turn-notify",
+  "keywords": ["dsh-plugin", "deepseek-harness", "notification", "windows"],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
