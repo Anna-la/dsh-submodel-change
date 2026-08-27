@@ -1,5 +1,5 @@
 /**
- * dsh-subagent-model — DeepSeek Harness 插件
+ * dsh-submodel-change — DeepSeek Harness 插件
  *
  * 目标: AI 调用 subagent(子代理)时,由你在 UI 里选择「这个子代理由哪个模型驱动」,
  * 选好后该子代理及其嵌套子代理都用你选的模型跑;同一父会话的后续子代理复用同一选择,
@@ -31,7 +31,7 @@ function miniSchema(fields) {
   return {
     '~standard': {
       version: 1,
-      vendor: 'dsh-subagent-model',
+      vendor: 'dsh-submodel-change',
       validate(value) {
         const input = value && typeof value === 'object' ? value : {}
         const out = {}
@@ -79,13 +79,13 @@ export const Config = miniSchema({
 
 export function apply(ctx, config) {
   if (config.enabled === false) {
-    console.log('[subagent-model] 已在配置中禁用 (enabled: false)')
+    console.log('[submodel-change] 已在配置中禁用 (enabled: false)')
     return
   }
 
   const has = (name) => ctx.get(name) !== undefined
   if (!has('userQuestions') || !has('llm') || !has('agents')) {
-    console.log('[subagent-model] 缺少 userQuestions/llm/agents 服务,已跳过(不影响其它功能)')
+    console.log('[submodel-change] 缺少 userQuestions/llm/agents 服务,已跳过(不影响其它功能)')
     return
   }
 
@@ -146,7 +146,7 @@ export function apply(ctx, config) {
         agent: rootAgent,
         signal,
         questions: [{
-          id: 'subagent-model',
+          id: 'submodel-change',
           question: '这个子代理用哪个模型运行?',
           header: '子代理模型选择',
           options,
@@ -156,7 +156,7 @@ export function apply(ctx, config) {
       if (!selected) return undefined
       return byLabel.get(selected)
     } catch (error) {
-      console.log('[subagent-model] 提问失败,按默认路由继续:', error?.message ?? error)
+      console.log('[submodel-change] 提问失败,按默认路由继续:', error?.message ?? error)
       return undefined
     }
   }
@@ -187,7 +187,7 @@ export function apply(ctx, config) {
     const route = chosen.get(agent.id)
     if (!route) return base
     if (base.provider === route.provider && base.model === route.model) return base
-    console.log(`[subagent-model] child ${agent.id} 使用 ${route.provider}/${route.model}`)
+    console.log(`[submodel-change] child ${agent.id} 使用 ${route.provider}/${route.model}`)
     return { ...base, provider: route.provider, model: route.model }
   }, { global: true })
 
@@ -195,5 +195,5 @@ export function apply(ctx, config) {
   ctx.on('subagent/end', (info) => { if (info?.id) forget(info.id) })
   ctx.on('agent/disposed', ({ agent }) => { if (agent) forget(agent.id) })
 
-  console.log('[subagent-model] 已加载: 子代理发起模型请求时弹窗选择模型')
+  console.log('[submodel-change] 已加载: 子代理发起模型请求时弹窗选择模型')
 }

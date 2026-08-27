@@ -1,4 +1,4 @@
-# dsh-subagent-model
+# dsh-submodel-change
 
 DeepSeek Harness 插件:当 AI 决定调用一个 **subagent(子代理)** 时,在弹窗里由你选择
 **这个子代理由哪个 provider/模型驱动**,选好后该子代理(以及它嵌套派生的子代理)
@@ -32,8 +32,8 @@ DeepSeek Harness 插件:当 AI 决定调用一个 **subagent(子代理)** 时,�
 
 ## 安装方式 A:绝对路径直接挂载(推荐,无需任何命令)
 
-1. 把整个 `dsh-subagent-model` 文件夹放到一个稳定的位置,例如:
-   `C:\Users\Jason\Desktop\dsh-better\dsh-subagent-model\`
+1. 把整个 `dsh-submodel-change` 文件夹放到一个稳定的位置,例如:
+   `C:\Users\Jason\Desktop\dsh-better\dsh-submodel-change\`
 
 2. 用记事本打开 DSH Desktop 的用户补丁文件:
 
@@ -45,12 +45,12 @@ DeepSeek Harness 插件:当 AI 决定调用一个 **subagent(子代理)** 时,�
 
    ```yaml
    - insert:
-       - id: subagent-model
-         name: 'C:/Users/Jason/Desktop/dsh-better/dsh-subagent-model/index.mjs'
+       - id: submodel-change
+         name: 'C:/Users/Jason/Desktop/dsh-better/dsh-submodel-change/index.mjs'
    ```
 
 3. **完全重启 DSH Desktop**(关闭窗口后重新打开,不是最小化),插件即生效。
-   启动日志里应出现 `[subagent-model] 已加载: 子代理发起模型请求时弹窗选择模型`。
+   启动日志里应出现 `[submodel-change] 已加载: 子代理发起模型请求时弹窗选择模型`。
 
 4. 让 AI 做一件需要派子代理的事(或直接说“调用一个 subagent”),看到模型选择卡片即成功。
 
@@ -59,13 +59,13 @@ DeepSeek Harness 插件:当 AI 决定调用一个 **subagent(子代理)** 时,�
 
 ## 安装方式 B:作为 bundle 安装(需要 dsh CLI)
 
-在 `dsh-subagent-model` 的**上一级目录**执行:
+在 `dsh-submodel-change` 的**上一级目录**执行:
 
 ```
-dsh plugin --profile web add ./dsh-subagent-model
+dsh plugin --profile web add ./dsh-submodel-change
 ```
 
-然后重启 DSH Desktop。卸载:`dsh plugin --profile web remove dsh-subagent-model`。
+然后重启 DSH Desktop。卸载:`dsh plugin --profile web remove dsh-submodel-change`。
 
 ---
 
@@ -75,8 +75,8 @@ dsh plugin --profile web add ./dsh-subagent-model
 
 ```yaml
 - insert:
-    - id: subagent-model
-      name: 'C:/Users/Jason/Desktop/dsh-better/dsh-subagent-model/index.mjs'
+    - id: submodel-change
+      name: 'C:/Users/Jason/Desktop/dsh-better/dsh-submodel-change/index.mjs'
       config:
         enabled: true          # 总开关
         askOncePerParent: true # 同一父会话的后续子代理复用第一次的选择;
@@ -113,7 +113,7 @@ config:
 ## 目录
 
 ```
-dsh-subagent-model/
+dsh-submodel-change/
 ├── index.mjs        # 插件本体(唯一需要挂载的文件)
 ├── package.json     # bundle 清单(方式 B 用)
 ├── cordis.patch.yml # bundle 补丁层(方式 B 用)

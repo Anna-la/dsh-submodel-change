@@ -1,5 +1,5 @@
 {
-  "name": "@jason666not/dsh-subagent-model",
+  "name": "@jason666not/dsh-submodel-change",
   "version": "0.1.0",
   "description": "Let the user pick which provider/model drives each subagent when the AI delegates.",
   "type": "module",
@@ -14,9 +14,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Anna-la/dsh-subagent-model.git"
+    "url": "https://github.com/Anna-la/dsh-submodel-change.git"
   },
-  "homepage": "https://github.com/Anna-la/dsh-subagent-model",
+  "homepage": "https://github.com/Anna-la/dsh-submodel-change",
   "keywords": ["dsh-plugin", "deepseek-harness", "subagent", "model-selection"],
   "dsh": {
     "bundle": {
