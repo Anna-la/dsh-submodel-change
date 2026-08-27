@@ -30,34 +30,38 @@ DeepSeek Harness 插件:当 AI 决定调用一个 **subagent(子代理)** 时,�
 
 ---
 
-## 安装方式 A:绝对路径直接挂载(推荐,无需任何命令)
+## 安装方式 A:自动安装脚本(推荐)
+
+> ⚠️ **不要**在 `cordis.patch.yml` 里用 `name: 'file:///C:/.../index.mjs'` 挂载。
+> Desktop 会把这种行判定为「未安装」,插件虽然加载了,但拿不到
+> `userQuestions / llm / agents` 服务,启动日志会显示
+> `[submodel-change] 缺少 userQuestions/llm/agents 服务,已跳过`,
+> 弹窗永远不会出现。正确姿势是用 **junction + 包名**(token-stat 同款方案)。
 
 1. 把整个 `dsh-submodel-change` 文件夹放到一个稳定的位置,例如:
    `C:\Users\Jason\Desktop\dsh-better\dsh-submodel-change\`
 
-2. 用记事本打开 DSH Desktop 的用户补丁文件:
+2. 在该目录下执行(自动创建 junction 并改写补丁文件,可重复执行):
 
    ```
-   %APPDATA%\dsh-desktop\harness\profiles\web\cordis.patch.yml
+   node tools/install.mjs
    ```
 
-   把里面的 `[]` 替换为(路径必须写成 **file:// URL**,不能用裸 `C:/...` 盘符路径,
-   Windows 下 ESM 加载器只认 `file:` 协议,否则启动会报
-   `Received protocol 'c:'`):
-
-   ```yaml
-   - insert:
-       - id: submodel-change
-         name: 'file:///C:/Users/Jason/Desktop/dsh-better/dsh-submodel-change/index.mjs'
-   ```
+   脚本会:
+   - 在 `%APPDATA%\dsh-desktop\harness\profiles\web\node_modules\@jason666not\`
+     建立指向本项目的 junction(《已安装》判定通过);
+   - 把 `cordis.patch.yml` 里该插件的 `name` 保证为包名
+     `'@jason666not/dsh-submodel-change'`;
+   - 从 profile 解析该包并打印 `resolve OK` 验证。
 
 3. **完全重启 DSH Desktop**(关闭窗口后重新打开,不是最小化),插件即生效。
-   启动日志里应出现 `[submodel-change] 已加载: 子代理发起模型请求时弹窗选择模型`。
+   启动日志里应出现 `[submodel-change] 已加载: 子代理发起模型请求时弹窗选择模型`,
+   且不再有 `profile inconsistency ... which is not installed` 警告。
 
 4. 让 AI 做一件需要派子代理的事(或直接说“调用一个 subagent”),看到模型选择卡片即成功。
 
-> 提示:如果重启后没生效,检查补丁文件是否仍是合法 YAML(缩进用两个空格)、
-> 路径是否写对。
+> 提示:如果补丁文件被别的工具重写过,重跑一次 `node tools/install.mjs` 即可,
+> 脚本是幂等的。
 
 ## 安装方式 B:作为 bundle 安装(需要 dsh CLI)
 
@@ -78,7 +82,7 @@ dsh plugin --profile web add ./dsh-submodel-change
 ```yaml
 - insert:
     - id: submodel-change
-      name: 'file:///C:/Users/Jason/Desktop/dsh-better/dsh-submodel-change/index.mjs'
+      name: '@jason666not/dsh-submodel-change'
       config:
         enabled: true          # 总开关
         askOncePerParent: true # 同一父会话的后续子代理复用第一次的选择;
@@ -95,6 +99,9 @@ config:
   askOncePerParent: false
   extraModels: ['openrouter/deepseek-r1']
 ```
+
+> 注:配置同样可以在 bundle 层 `cordis.patch.yml`(即本项目根目录那个)里写,
+> 安装方式 B 会把它作为补丁层合并。
 
 ---
 
@@ -117,7 +124,9 @@ config:
 ```
 dsh-submodel-change/
 ├── index.mjs        # 插件本体(唯一需要挂载的文件)
-├── package.json     # bundle 清单(方式 B 用)
+├── package.json     # bundle 清单 + 包名解析
 ├── cordis.patch.yml # bundle 补丁层(方式 B 用)
+├── tools/
+│   └── install.mjs  # 安装脚本:建 junction + 改写 patch 为包名(方式 A)
 └── README.md
 ```
